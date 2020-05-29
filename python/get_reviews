@@ -1,0 +1,88 @@
+#! /usr/bin/python3
+
+import pandas as pd
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.select import Select
+from selenium import webdriver
+import time
+
+
+## READ URLS TO ITER OVER -------------------------------------------------------
+
+BASE_URL = 'https://www.amazon.com/s?k=gound+coffee&tag=duckduckgo-20'
+
+driver = webdriver.Chrome()
+driver.get(BASE_URL)
+time.sleep(5)
+
+products = driver.find_elements_by_partial_link_text('Coffee')
+
+z = list(map(lambda x: x.get_attribute('href'), products))
+driver.close()
+
+
+## FOR EACH PRODUCT ----------------------------------------------------------------
+
+def page_iter(product):
+
+    driver = webdriver.Chrome()
+
+	# open url from list
+    driver.get(product)
+    time.sleep(3)
+
+    review_link = driver.find_element_by_partial_link_text("See all reviews from the United States")
+    review_link.click()
+
+    review_type_dropdown = Select(driver.find_element_by_css_selector('#star-count-dropdown'))
+    review_type_dropdown.select_by_visible_text('All critical')
+
+    page = driver.find_element_by_css_selector('body')
+    page.click()
+
+    reviews = driver.find_elements_by_css_selector('.review-text-content span')
+
+    # for i in reviews:
+    #     print(i.text)
+
+    # print("got reviews")
+    product_revs = ['start']
+    for i in reviews:
+        try:
+            new = i.text
+            product_revs.append(new)
+        except:
+            pass
+
+
+   
+  
+
+    time.sleep(2)
+    # review_type_dropdown.send_keys(Keys.ARROW_DOWN)
+    
+
+
+    time.sleep(2)
+    return(product_revs)
+    driver.close()
+
+
+
+## RUN PROGRAM ------------------------------------------------------------------
+if __name__ == '__main__':
+
+    alls = []
+
+    for i in z:
+        try:
+            foo = page_iter(i)
+            alls.append(foo)
+        except:
+            pass
+    
+
+df = pd.DataFrame({'text' :  alls})
+df.head()
+df.to_csv("data/df.csv")
+
